@@ -1,52 +1,48 @@
-import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
-
-// Initialize Gemini API
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { getLanguageByCode } from "@/lib/languages";
+import { TranslationRequestBody, SubtitleCue } from "@/lib/translation/types";
+import { translateWithGemini } from "@/lib/translation/providers/gemini";
+import { translateWithGoogle } from "@/lib/translation/providers/google";
 
 export async function POST(req: Request) {
   try {
-    const { chunk } = await req.json();
-    
-    if (!chunk || !Array.isArray(chunk)) {
-      return NextResponse.json({ error: "Invalid chunk data provided." }, { status: 400 });
+    const body: TranslationRequestBody = await req.json();
+    const { chunk, targetLang = "en", engine = "google", apiKey } = body;
+
+    if (!chunk || !Array.isArray(chunk) || chunk.length === 0) {
+      return NextResponse.json({ error: "Invalid or empty chunk data provided." }, { status: 400 });
     }
 
-    const prompt = `You are a professional subtitle translator.
-Translate the following array of subtitle objects from English to Sinhala.
-Maintain the exact same array structure. ONLY translate the 'text' field to Sinhala. Keep 'id', 'startTime', and 'endTime' completely unmodified.
-Do not add any conversational text or formatting outside of the JSON array.
+    const language = getLanguageByCode(targetLang);
 
-Input JSON:
-${JSON.stringify(chunk)}
-`;
+    let translatedChunk: SubtitleCue[];
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
+    if (engine === "google") {
+      translatedChunk = await translateWithGoogle(chunk, language.code);
+    } else if (engine === "gemini") {
+      if (!apiKey || !apiKey.trim()) {
+        return NextResponse.json(
+          {
+            error:
+              "Gemini API key is required for AI mode. Please enter your API key in the settings or switch to Google Translate.",
+          },
+          { status: 400 }
+        );
       }
-    });
-
-    const translatedText = response.text;
-    
-    if (!translatedText) {
-      throw new Error("Received empty response from Gemini API");
-    }
-
-    let translatedChunk;
-    try {
-      translatedChunk = JSON.parse(translatedText);
-    } catch (parseError) {
-      console.error("Failed to parse JSON response:", translatedText);
-      throw new Error("Failed to parse Gemini response as JSON.");
+      translatedChunk = await translateWithGemini(chunk, language.name, apiKey);
+    } else {
+      return NextResponse.json(
+        { error: `Unsupported translation engine: '${engine}'. Choose 'gemini' or 'google'.` },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ translatedChunk });
-
   } catch (error: any) {
     console.error("Translation API Error:", error);
-    return NextResponse.json({ error: error.message || "An error occurred during translation" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "An unexpected error occurred during translation" },
+      { status: 500 }
+    );
   }
 }
