@@ -4,13 +4,46 @@ const DELIMITER = "\n~~~SPLIT~~~\n";
 const GOOGLE_TRANSLATE_ENDPOINT = "https://translate.googleapis.com/translate_a/single";
 
 /**
- * Translates a single text using Google Translate's free web endpoint
+ * Translates a single text using Cloudflare Worker proxy (Solution 2) if configured,
+ * with automatic fallback to Google Translate's free web endpoint.
  */
 async function translateSingleText(text: string, targetLang: string): Promise<string> {
   if (!text || !text.trim()) {
     return text;
   }
 
+  const proxyUrl = process.env.CLOUDFLARE_WORKER_URL || process.env.TRANSLATION_PROXY_URL;
+
+  // 1. Try Cloudflare Worker Proxy first (if configured in environment variables)
+  if (proxyUrl && proxyUrl.trim()) {
+    try {
+      const proxyRes = await fetch(proxyUrl.trim(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          targetLang,
+        }),
+      });
+
+      if (proxyRes.ok) {
+        const data = await proxyRes.json();
+        if (data && typeof data.translatedText === "string") {
+          return data.translatedText;
+        }
+      } else {
+        console.warn(
+          `Cloudflare translation proxy responded with HTTP ${proxyRes.status}. Falling back to direct endpoint.`
+        );
+      }
+    } catch (proxyErr) {
+      console.warn("Cloudflare translation proxy error, falling back to direct endpoint:", proxyErr);
+    }
+  }
+
+  // 2. Direct Google Translate web endpoint (default / fallback)
   const params = new URLSearchParams({
     client: "gtx",
     sl: "auto",

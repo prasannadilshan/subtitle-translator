@@ -1,4 +1,4 @@
-export type TranslationEngine = "gemini" | "google";
+export type TranslationEngine = "google" | "groq" | "gemini";
 
 export interface SubtitleCue {
   id: string;

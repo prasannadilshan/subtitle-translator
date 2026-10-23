@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Languages, Menu, X } from "lucide-react";
+import { Captions, Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -21,8 +21,8 @@ export default function Navbar() {
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         {/* Logo & Brand */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="p-1.5 bg-white text-blue-600 rounded-lg shadow-xs group-hover:scale-105 transition-transform">
-            <Languages size={19} />
+          <div className="p-1.5 bg-white text-blue-600 rounded-lg shadow-xs group-hover:scale-105 transition-transform flex items-center justify-center">
+            <Captions size={19} className="stroke-[2.2]" />
           </div>
           <span className="font-bold text-base text-white tracking-tight">
             Subtitle Translator

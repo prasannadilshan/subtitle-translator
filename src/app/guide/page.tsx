@@ -9,61 +9,90 @@ import {
   ArrowRight,
   HelpCircle,
   Zap,
+  Sparkles,
   Lock
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "How to Get a Free Gemini API Key - Subtitle Translator",
+  title: "API Key Guide - Groq & Gemini - Subtitle Translator",
   description:
-    "Step-by-step guide on how to get a free Google Gemini API key from Google AI Studio to translate subtitles using AI.",
+    "Step-by-step guides on how to get free API keys for Groq and Google Gemini to translate subtitles using AI.",
 };
 
 export default function ApiKeyGuidePage() {
-  const steps = [
+  const providers = [
     {
-      step: "01",
-      title: "Go to Google AI Studio",
-      description:
-        "Open your browser and visit Google AI Studio's API Key management page at aistudio.google.com/app/apikey. Sign in with any standard Google (Gmail) account.",
-      actionLink: "https://aistudio.google.com/app/apikey",
-      actionText: "Open Google AI Studio",
+      id: "groq",
+      name: "Groq AI (Llama 3.1 8B)",
+      badge: "Ultra Fast • 100% Free Forever",
+      icon: Zap,
+      accentColor: "text-amber-600 bg-amber-50 border-amber-200",
+      description: "Groq runs open-source models at blazing speed. Completely free with 14,400 requests per day. No credit card required.",
+      link: "https://console.groq.com/keys",
+      linkText: "Open Groq Console",
+      steps: [
+        {
+          step: "01",
+          title: "Visit Groq Console",
+          description: "Open console.groq.com/keys in your browser and sign in with Google or GitHub (no payment info needed).",
+        },
+        {
+          step: "02",
+          title: "Click 'Create API Key'",
+          description: "Click the blue 'Create API Key' button and enter any name for your key.",
+        },
+        {
+          step: "03",
+          title: "Copy Key & Translate",
+          description: "Copy your key (starts with 'gsk_...') and paste it into the Groq API key field in Subtitle Translator.",
+        },
+      ],
     },
     {
-      step: "02",
-      title: "Click 'Create API Key'",
-      description:
-        "On the dashboard, click the blue 'Create API key' button. If prompted to select a Google Cloud project, choose an existing project or click 'Create project in new project'.",
-    },
-    {
-      step: "03",
-      title: "Copy Your API Key",
-      description:
-        "A popup will display your newly generated secret key (it begins with 'AIzaSy...'). Click the 'Copy' icon to copy the key to your clipboard.",
-    },
-    {
-      step: "04",
-      title: "Paste into Subtitle Translator",
-      description:
-        "Return to Subtitle Translator, select 'Gemini Flash' as your translation engine, and paste your key into the Gemini API Key input field. Your key is saved locally in your browser only.",
+      id: "gemini",
+      name: "Google Gemini (Flash)",
+      badge: "Balanced • Google AI Studio",
+      icon: Sparkles,
+      accentColor: "text-indigo-600 bg-indigo-50 border-indigo-200",
+      description: "Google's versatile multimodal AI. Fast, accurate, and free with a standard Google account.",
+      link: "https://aistudio.google.com/app/apikey",
+      linkText: "Open Google AI Studio",
+      steps: [
+        {
+          step: "01",
+          title: "Visit Google AI Studio",
+          description: "Go to aistudio.google.com/app/apikey and sign in with your regular Google account.",
+        },
+        {
+          step: "02",
+          title: "Click 'Create API Key'",
+          description: "Click 'Create API key' and choose or create a project to generate your secret key.",
+        },
+        {
+          step: "03",
+          title: "Copy Key & Translate",
+          description: "Copy your key (starts with 'AIzaSy...') and paste it into the Gemini API key field in Subtitle Translator.",
+        },
+      ],
     },
   ];
 
   const faqs = [
     {
-      q: "Is the Gemini API key really free?",
-      a: "Yes. Google provides a generous free tier for Google AI Studio with up to 15 requests per minute, which is more than enough to translate full movies and videos without paying anything.",
+      q: "Do any of these providers require a credit card?",
+      a: "No! Both Groq and Google Gemini are 100% free without any credit card or payment information required.",
     },
     {
-      q: "Where is my API key stored?",
-      a: "Your key is saved exclusively in your browser's localStorage. It is never transmitted to, saved on, or logged by our servers.",
+      q: "Which AI provider is recommended?",
+      a: "Groq is the fastest and gives 14,400 free requests every day with sub-second speeds. Gemini is balanced, reliable, and powered by Google AI Studio.",
     },
     {
-      q: "Do I need an API key for Google Translate?",
-      a: "No! Google Translate mode is 100% free and does not require any API key or registration.",
+      q: "Where are my API keys stored?",
+      a: "All API keys are stored strictly inside your browser's local storage (localStorage). They are never saved to our database or logged on our servers.",
     },
     {
-      q: "What should I do if my key stops working?",
-      a: "Make sure you copied the full key starting with 'AIzaSy' without trailing spaces. You can also generate a new key anytime in Google AI Studio.",
+      q: "Can I use the tool without any API key?",
+      a: "Yes! Simply choose 'Google' as your translation engine. It is 100% free and requires zero setup or registration.",
     },
   ];
 
@@ -73,73 +102,74 @@ export default function ApiKeyGuidePage() {
       <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold mb-3">
           <Key size={14} className="text-blue-600" />
-          API Key Guide
+          AI Key Setup Guides
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-950 tracking-tight mb-2">
-          How to Get a Free Gemini API Key
+          How to Get Free AI API Keys
         </h1>
         <p className="text-sm font-medium text-blue-800/80 leading-relaxed">
-          Follow this quick 4-step tutorial to create a free API key in Google AI Studio and unlock deep contextual AI subtitle translation.
+          Choose any of our supported AI providers to unlock intelligent subtitle translation. None of these options require a credit card to get started.
         </p>
       </div>
 
-      {/* Direct AI Studio Callout Card */}
-      <div className="bg-white border border-blue-200 rounded-2xl p-6 sm:p-7 shadow-xs mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100 shrink-0">
-            <Zap size={24} />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-blue-950">Quick Link to Google AI Studio</h3>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Official Google developer console where keys are generated for free.
-            </p>
-          </div>
-        </div>
-
-        <a
-          href="https://aistudio.google.com/app/apikey"
-          target="_blank"
-          rel="noreferrer"
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs sm:text-sm transition-colors shadow-xs shrink-0"
-        >
-          <span>Open AI Studio</span>
-          <ExternalLink size={15} />
-        </a>
-      </div>
-
-      {/* Step by Step Cards */}
-      <div className="space-y-4 mb-12">
-        <h2 className="text-xl font-bold text-blue-950 mb-4">Step-by-Step Instructions</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {steps.map((s) => (
+      {/* Provider Guides */}
+      <div className="space-y-8 mb-12">
+        {providers.map((p) => {
+          const Icon = p.icon;
+          return (
             <div
-              key={s.step}
-              className="bg-white border border-blue-200 rounded-xl p-5 shadow-xs flex flex-col justify-between"
+              key={p.id}
+              className="bg-white border border-blue-200 rounded-2xl p-6 sm:p-7 shadow-xs"
             >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                    {s.step}
-                  </span>
-                  {s.actionLink && (
-                    <a
-                      href={s.actionLink}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      {s.actionText} <ExternalLink size={12} />
-                    </a>
-                  )}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-blue-100 mb-5">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl border ${p.accentColor} shrink-0`}>
+                    <Icon size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base font-bold text-blue-950">{p.name}</h2>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 bg-blue-50 text-blue-800 rounded-full border border-blue-200/60">
+                        {p.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">{p.description}</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-blue-950 mb-1.5">{s.title}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{s.description}</p>
+
+                <a
+                  href={p.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-xs shrink-0"
+                >
+                  <span>{p.linkText}</span>
+                  <ExternalLink size={12} />
+                </a>
+              </div>
+
+              {/* 3 Step Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {p.steps.map((s) => (
+                  <div
+                    key={s.step}
+                    className="p-3.5 bg-blue-50/40 rounded-xl border border-blue-100 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shadow-xs">
+                          {s.step}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-blue-950 mb-1">{s.title}</h4>
+                      <p className="text-[11px] text-slate-600 leading-relaxed">{s.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* Security & Privacy Card */}
@@ -148,9 +178,9 @@ export default function ApiKeyGuidePage() {
           <Lock size={18} />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-blue-950 mb-1">Your Key is 100% Safe</h3>
+          <h3 className="text-sm font-bold text-blue-950 mb-1">Your Keys are 100% Private</h3>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Unlike other web tools, Subtitle Translator does not save your API key to any backend database. The key resides entirely within your local browser storage (localStorage). When translating, it is transmitted securely directly to the Google Gemini API to process your subtitle text.
+            Subtitle Translator does not store your keys in any database. Keys are kept solely within your browser’s localStorage. You can clear or update them anytime with a single click.
           </p>
         </div>
       </div>
@@ -159,7 +189,7 @@ export default function ApiKeyGuidePage() {
       <div className="bg-white border border-blue-200 rounded-2xl p-6 sm:p-8 shadow-xs mb-12">
         <div className="flex items-center gap-2 mb-6">
           <HelpCircle size={20} className="text-blue-600" />
-          <h2 className="text-lg font-bold text-blue-950">API Key FAQs</h2>
+          <h2 className="text-lg font-bold text-blue-950">Frequently Asked Questions</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
