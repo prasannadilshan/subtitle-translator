@@ -17,6 +17,13 @@ export const metadata: Metadata = {
     "Free online subtitle translator. Quickly translate subtitle files to over 40 different languages using Google Translate or Gemini AI.",
   keywords: ["subtitles translator", "translate subtitles", "free srt translator", "subtitle translation tool"],
   authors: [{ name: "Subtitle Translator Team" }],
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

@@ -59,6 +59,8 @@ export default function SubtitleTranslator() {
   const [chunks, setChunks] = useState<ChunkState[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isPartialDownloading, setIsPartialDownloading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [limitReachedEngine, setLimitReachedEngine] = useState<TranslationEngine | null>(null);
   const [retryCountdown, setRetryCountdown] = useState<{
@@ -521,6 +523,56 @@ export default function SubtitleTranslator() {
     const blob = new Blob([newSrtContent], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     setDownloadUrl(url);
+  };
+
+  const handleTriggerDownload = () => {
+    if (isDownloading || !downloadUrl) return;
+    setIsDownloading(true);
+
+    try {
+      const filename = `translated_${selectedLanguage ? selectedLanguage.code : "out"}_${file?.name || "subtitles.srt"}`;
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download error:", err);
+    }
+
+    setTimeout(() => {
+      setIsDownloading(false);
+    }, 1200);
+  };
+
+  const handleTriggerPartialDownload = () => {
+    if (isPartialDownloading) return;
+    setIsPartialDownloading(true);
+
+    try {
+      const allTranslatedData = chunks.flatMap((c) =>
+        c.status === "success" && c.translatedData ? c.translatedData : c.originalData
+      );
+      const parser = new Parser();
+      const newSrtContent = parser.toSrt(allTranslatedData);
+      const blob = new Blob([newSrtContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const filename = `partial_${selectedLanguage ? selectedLanguage.code : "out"}_${file?.name || "subtitles.srt"}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (err) {
+      console.error("Partial download error:", err);
+    }
+
+    setTimeout(() => {
+      setIsPartialDownloading(false);
+    }, 1200);
   };
 
   const completedCount = chunks.filter((c) => c.status === "success").length;
@@ -1105,11 +1157,25 @@ export default function SubtitleTranslator() {
               </button>
               <button
                 type="button"
-                onClick={generateDownload}
-                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={handleTriggerPartialDownload}
+                disabled={isPartialDownloading}
+                className={`w-full font-semibold py-3 px-4 rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                  isPartialDownloading
+                    ? "bg-blue-50 text-blue-700 border-blue-200 cursor-wait"
+                    : "bg-slate-50 hover:bg-slate-100 text-slate-700"
+                }`}
               >
-                <Download size={14} />
-                <span>Download partial translated subtitles ({completedCount} batches)</span>
+                {isPartialDownloading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin text-blue-600 shrink-0" />
+                    <span>Preparing download...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} />
+                    <span>Download partial translated subtitles ({completedCount} batches)</span>
+                  </>
+                )}
               </button>
             </div>
           ) : (
@@ -1229,14 +1295,28 @@ export default function SubtitleTranslator() {
               </p>
             </div>
 
-            <a
-              href={downloadUrl}
-              download={`translated_${selectedLanguage ? selectedLanguage.code : "out"}_${file?.name || "subtitles.srt"}`}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
+            <button
+              type="button"
+              onClick={handleTriggerDownload}
+              disabled={isDownloading}
+              className={`w-full font-bold py-4 px-6 rounded-2xl text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer ${
+                isDownloading
+                  ? "bg-blue-700 text-white opacity-95 cursor-wait"
+                  : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white"
+              }`}
             >
-              <Download size={18} />
-              <span>Download Translated SRT</span>
-            </a>
+              {isDownloading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin text-white shrink-0" />
+                  <span>Downloading SRT...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={18} />
+                  <span>Download Translated SRT</span>
+                </>
+              )}
+            </button>
 
             <div>
               <button
