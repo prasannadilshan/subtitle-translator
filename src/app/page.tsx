@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import Parser from "srt-parser-2";
 import {
   Upload,
+  UploadCloud,
   Download,
   CheckCircle,
   Loader2,
@@ -27,7 +28,10 @@ import {
   Pencil,
   Trash2,
   CheckCircle2,
-  Captions
+  Captions,
+  ArrowRight,
+  ShieldCheck,
+  Infinity
 } from "lucide-react";
 import Link from "next/link";
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE_CODE, getLanguageByCode } from "@/lib/languages";
@@ -526,195 +530,260 @@ export default function SubtitleTranslator() {
   const progress = totalChunks > 0 ? Math.round((completedCount / totalChunks) * 100) : 0;
 
   return (
-    <main className="flex-1 w-full max-w-xl mx-auto px-4 py-8 flex flex-col justify-center">
-      {/* Page Title & CC Subtitle Logo */}
-      <div className="mb-6 flex items-center gap-3.5">
-        <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl shadow-sm border border-blue-500/20 flex items-center justify-center shrink-0">
-          <Captions size={28} className="stroke-[2.2]" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-blue-950 tracking-tight">
-            Translate Subtitles
-          </h1>
-          <p className="text-xs sm:text-sm font-medium text-blue-800/80 mt-0.5">
-            Upload an SRT file and translate it instantly into your chosen language.
-          </p>
-        </div>
+    <main className="relative flex-1 w-full px-4 sm:px-6 py-10 sm:py-14 flex flex-col items-center justify-start overflow-hidden">
+      {/* Decorative Ambient Background Shapes (Solid tints, zero purple, zero gradients) */}
+      <div className="absolute -left-36 top-16 w-80 sm:w-96 h-80 sm:h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute -right-36 top-20 w-80 sm:w-96 h-80 sm:h-96 bg-sky-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Tilted amber cube top-left */}
+      <div className="hidden md:block absolute left-[12%] top-64 w-5 h-5 bg-amber-200/80 rounded rotate-12 shadow-2xs pointer-events-none -z-10" />
+      {/* Emerald outline ring right */}
+      <div className="hidden md:block absolute right-[12%] top-80 w-6 h-6 border-2 border-emerald-300/70 rounded-full pointer-events-none -z-10" />
+      {/* Soft blue dot accent */}
+      <div className="hidden md:block absolute left-[8%] top-96 w-3 h-3 bg-blue-300/50 rounded-full pointer-events-none -z-10" />
+
+      {/* Top-Right Playful Annotation with Curved Arrow */}
+      <div className="hidden lg:flex flex-col items-center absolute top-8 right-[15%] pointer-events-none select-none -z-10">
+        <span className="text-[11px] font-semibold rotate-6 text-blue-500 tracking-wide text-center leading-tight">
+          Better<br />Subtitles,<br />Global Reach
+        </span>
+        <svg
+          className="w-9 h-9 text-blue-400 mt-1 rotate-6"
+          viewBox="0 0 32 32"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M 22 4 C 16 12, 10 18, 6 26 M 6 26 L 13 25 M 6 26 L 8 19" />
+        </svg>
       </div>
 
-      {/* Global Error Banner */}
-      {globalError && (
-        <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm flex items-start gap-2.5 shadow-xs">
-          <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600" />
-          <span>{globalError}</span>
-        </div>
-      )}
+      {/* Hero Title & Subtitle (Centered, NO msg icon, NO purple, NO gradients) */}
+      <div className="text-center max-w-xl mx-auto mb-8 relative z-10">
+        <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-tight">
+          Translate <span className="text-blue-600">Subtitles</span>
+        </h1>
+        <p className="text-slate-500 text-xs sm:text-sm font-medium mt-2 max-w-md mx-auto">
+          Upload an SRT file and translate it into your chosen language.
+        </p>
+      </div>
 
-
-
-      {/* 2. Upload Place (First) */}
-      <div className="mb-4">
-        <input
-          type="file"
-          accept=".srt"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          disabled={isTranslating}
-          className="hidden"
-        />
-
-        {!file ? (
-          <div
-            onClick={() => !isTranslating && fileInputRef.current?.click()}
-            className={`border-2 border-dashed border-blue-300 hover:border-blue-600 bg-white hover:bg-blue-50/50 rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors shadow-xs ${
-              isTranslating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            }`}
-          >
-            <div className="p-3.5 bg-blue-600 text-white rounded-full mb-3 shadow-xs">
-              <Upload size={22} />
-            </div>
-            <p className="text-sm font-semibold text-blue-950 mb-1">
-              Click to upload your .srt file
-            </p>
-            <p className="text-xs text-blue-700/70">Supports standard SubRip (.srt) subtitle files</p>
-          </div>
-        ) : (
-          <div className="border border-blue-200 rounded-xl p-4 bg-white shadow-xs flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-600 text-white rounded-lg shadow-xs">
-                <FileText size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-blue-950 truncate max-w-[240px] sm:max-w-xs">
-                  {file.name}
-                </p>
-                <p className="text-xs font-medium text-blue-700/70">
-                  {totalCues} subtitle lines ({totalChunks} batches)
-                </p>
-              </div>
-            </div>
-
-            {!isTranslating && !downloadUrl && (
+      {/* Main Card Container */}
+      <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-4 sm:p-8 md:p-9 space-y-5 sm:space-y-6 relative z-10">
+        {/* Global Error Banner */}
+        {globalError && (
+          <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs sm:text-sm flex items-start gap-2.5 shadow-2xs animate-in fade-in">
+            <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-600" />
+            <div className="flex-1 flex items-center justify-between">
+              <span>{globalError}</span>
               <button
                 type="button"
-                onClick={handleResetFile}
-                className="p-1.5 text-blue-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Remove file"
+                onClick={() => setGlobalError(null)}
+                className="text-red-400 hover:text-red-700 p-1 cursor-pointer"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
-            )}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* 3. Translation Settings Card (Under the Upload Place) */}
-      <div className="mb-5 bg-white border border-blue-200 rounded-xl p-4 sm:p-5 shadow-xs space-y-4">
-        {/* Target Language Selection */}
-        <div className="relative" ref={langDropdownRef}>
-          <label className="block text-xs font-bold text-blue-900 uppercase tracking-wider mb-1.5">
-            Target Language
-          </label>
-          <button
-            type="button"
-            disabled={isTranslating}
-            onClick={() => setIsLangOpen(!isLangOpen)}
-            className={`w-full flex items-center justify-between p-2.5 rounded-lg border text-left text-sm transition-colors ${
-              !selectedLanguage
-                ? "bg-blue-50/40 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50/70"
-                : "bg-blue-50/60 border-blue-200 hover:border-blue-400"
-            } ${isTranslating ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <div className="flex items-center gap-2">
-              <Globe size={16} className={selectedLanguage ? "text-blue-600" : "text-blue-400"} />
-              {selectedLanguage ? (
-                <>
-                  <span className="font-semibold text-blue-950">{selectedLanguage.name}</span>
-                  <span className="text-xs text-blue-700/70">({selectedLanguage.nativeName})</span>
-                </>
-              ) : (
-                <span className="font-medium text-blue-700/70">Select target language...</span>
-              )}
+        {/* 1. Upload SRT File */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+            <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <UploadCloud size={12} />
             </div>
-            <ChevronDown
-              size={16}
-              className={`text-blue-500 transition-transform ${isLangOpen ? "rotate-180" : ""}`}
-            />
-          </button>
+            <span>
+              <span className="text-blue-600 font-bold">1.</span> Upload SRT File
+            </span>
+          </div>
 
-          {/* Language Dropdown Popover */}
-          {isLangOpen && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-blue-200 rounded-xl shadow-lg z-50 overflow-hidden">
-              <div className="p-2 border-b border-blue-100 bg-blue-50/30">
-                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white rounded-lg border border-blue-200">
-                  <Search size={14} className="text-blue-400" />
-                  <input
-                    type="text"
-                    placeholder="Search language..."
-                    value={langSearch}
-                    onChange={(e) => setLangSearch(e.target.value)}
-                    className="w-full bg-transparent text-xs sm:text-sm text-blue-950 placeholder-blue-400 focus:outline-none"
-                    autoFocus
-                  />
+          <input
+            type="file"
+            accept=".srt"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            disabled={isTranslating}
+            className="hidden"
+          />
+
+          {!file ? (
+            <div
+              onClick={() => !isTranslating && fileInputRef.current?.click()}
+              className={`border-2 border-dashed border-blue-200 hover:border-blue-500 bg-blue-50/20 hover:bg-blue-50/50 rounded-2xl py-9 px-6 flex flex-col items-center justify-center text-center transition-all ${
+                isTranslating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              }`}
+            >
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-full mb-2.5">
+                <UploadCloud size={32} className="stroke-[1.8]" />
+              </div>
+              <p className="text-sm font-bold text-slate-800">Drag & drop your SRT file here</p>
+              <p className="text-xs text-slate-400 mt-0.5">or click to browse</p>
+            </div>
+          ) : (
+            <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shrink-0">
+                  <FileText size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium truncate">
+                    {totalCues} subtitle lines • {totalChunks} batches • {(file.size / 1024).toFixed(1)} KB
+                  </p>
                 </div>
               </div>
-
-              <div className="max-h-56 overflow-y-auto p-1 space-y-0.5">
-                {filteredLanguages.map((lang) => {
-                  const isSelected = lang.code === targetLang;
-                  return (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => {
-                        handleConfigChange(lang.code, engine);
-                        setIsLangOpen(false);
-                        setLangSearch("");
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm text-left transition-colors ${
-                        isSelected
-                          ? "bg-blue-600 text-white font-semibold"
-                          : "text-slate-700 hover:bg-blue-50 hover:text-blue-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>{lang.name}</span>
-                        <span className={isSelected ? "text-blue-100" : "text-blue-700/60"}>
-                          ({lang.nativeName})
-                        </span>
-                      </div>
-                      {isSelected && <Check size={14} />}
-                    </button>
-                  );
-                })}
-                {filteredLanguages.length === 0 && (
-                  <div className="p-3 text-center text-xs text-blue-700/70">No matching languages found</div>
-                )}
-              </div>
+              {!isTranslating && !downloadUrl && (
+                <button
+                  type="button"
+                  onClick={handleResetFile}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-colors shrink-0 ml-2 cursor-pointer"
+                  title="Remove file"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Engine Selector */}
-        <div>
-          <label className="block text-xs font-bold text-blue-900 uppercase tracking-wider mb-2">
-            Translation Engine
-          </label>
-          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-            {/* Google Translate */}
+        {/* 2. Target Language */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+            <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <Globe size={12} />
+            </div>
+            <span>
+              <span className="text-blue-600 font-bold">2.</span> Target Language
+            </span>
+          </div>
+
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              type="button"
+              disabled={isTranslating}
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border text-left text-sm transition-all ${
+                !selectedLanguage
+                  ? "bg-slate-50/70 border-slate-200 hover:border-blue-400"
+                  : "bg-blue-50/30 border-blue-200 hover:border-blue-400"
+              } ${isTranslating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Globe size={18} className={selectedLanguage ? "text-blue-600" : "text-slate-400"} />
+                {selectedLanguage ? (
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-bold text-slate-900">{selectedLanguage.name}</span>
+                    <span className="text-xs text-slate-500 font-medium">({selectedLanguage.nativeName})</span>
+                  </div>
+                ) : (
+                  <span className="font-medium text-slate-500">Select target language...</span>
+                )}
+              </div>
+              <ChevronDown
+                size={18}
+                className={`text-slate-400 transition-transform shrink-0 ml-2 ${isLangOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {/* Language Popover */}
+            {isLangOpen && (
+              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="p-2.5 border-b border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200">
+                    <Search size={14} className="text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search language..."
+                      value={langSearch}
+                      onChange={(e) => setLangSearch(e.target.value)}
+                      className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto p-1.5 space-y-0.5">
+                  {filteredLanguages.map((lang) => {
+                    const isSelected = lang.code === targetLang;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          handleConfigChange(lang.code, engine);
+                          setIsLangOpen(false);
+                          setLangSearch("");
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm text-left transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-blue-600 text-white font-semibold"
+                            : "text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{lang.name}</span>
+                          <span className={isSelected ? "text-blue-100" : "text-slate-400"}>
+                            ({lang.nativeName})
+                          </span>
+                        </div>
+                        {isSelected && <Check size={14} />}
+                      </button>
+                    );
+                  })}
+                  {filteredLanguages.length === 0 && (
+                    <div className="p-3 text-center text-xs text-slate-500">
+                      No matching languages found
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Translation Engine */}
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+            <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <Zap size={12} />
+            </div>
+            <span>
+              <span className="text-blue-600 font-bold">3.</span> Translation Engine
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Google */}
             <button
               type="button"
               onClick={() => handleConfigChange(targetLang, "google")}
               disabled={isTranslating}
-              className={`flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-colors min-h-[58px] ${
+              className={`flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                 engine === "google"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs font-semibold"
-                  : "bg-blue-50/50 text-blue-950 border-blue-200 hover:bg-blue-100/70 hover:border-blue-300 font-medium"
+                  ? "bg-blue-50/50 border-blue-500 shadow-2xs ring-1 ring-blue-500"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               } ${isTranslating ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <div className="flex items-center gap-1.5">
-                <Globe size={14} className={engine === "google" ? "text-white" : "text-blue-600"} />
-                <span className="text-xs font-bold">Google</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 bg-blue-100 text-blue-600 rounded-xl shrink-0">
+                  <Sparkles size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">Google</p>
+                  <p className="text-[11px] text-slate-500 truncate">Fast & accurate</p>
+                </div>
+              </div>
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 ${
+                  engine === "google" ? "border-blue-600" : "border-slate-300"
+                }`}
+              >
+                {engine === "google" && <div className="w-2 h-2 rounded-full bg-blue-600" />}
               </div>
             </button>
 
@@ -723,264 +792,78 @@ export default function SubtitleTranslator() {
               type="button"
               onClick={() => handleConfigChange(targetLang, "groq")}
               disabled={isTranslating}
-              className={`flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-colors min-h-[58px] ${
+              className={`flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                 engine === "groq"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs font-semibold"
-                  : "bg-blue-50/50 text-blue-950 border-blue-200 hover:bg-blue-100/70 hover:border-blue-300 font-medium"
+                  ? "bg-blue-50/50 border-blue-500 shadow-2xs ring-1 ring-blue-500"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               } ${isTranslating ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <Zap size={14} className={engine === "groq" ? "text-white" : "text-amber-500"} />
-                <span className="text-xs font-bold">Groq AI</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 bg-amber-100 text-amber-600 rounded-xl shrink-0">
+                  <Zap size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">Groq AI</p>
+                  <p className="text-[11px] text-slate-500 truncate">Ultra Fast • Free Key</p>
+                </div>
               </div>
-              <span className={`text-[10px] ${engine === "groq" ? "text-blue-100" : "text-blue-700/80"}`}>
-                Ultra Fast • Free Key
-              </span>
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 ${
+                  engine === "groq" ? "border-blue-600" : "border-slate-300"
+                }`}
+              >
+                {engine === "groq" && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+              </div>
             </button>
 
-            {/* Gemini AI */}
+            {/* Gemini */}
             <button
               type="button"
               onClick={() => handleConfigChange(targetLang, "gemini")}
               disabled={isTranslating}
-              className={`flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-colors min-h-[58px] ${
+              className={`flex items-center justify-between p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                 engine === "gemini"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-xs font-semibold"
-                  : "bg-blue-50/50 text-blue-950 border-blue-200 hover:bg-blue-100/70 hover:border-blue-300 font-medium"
+                  ? "bg-blue-50/50 border-blue-500 shadow-2xs ring-1 ring-blue-500"
+                  : "bg-white border-slate-200 hover:border-slate-300"
               } ${isTranslating ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <Sparkles size={14} className={engine === "gemini" ? "text-white" : "text-indigo-600"} />
-                <span className="text-xs font-bold">Gemini</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 bg-blue-100 text-blue-600 rounded-xl shrink-0">
+                  <Sparkles size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">Gemini</p>
+                  <p className="text-[11px] text-slate-500 truncate">Balanced • Free Key</p>
+                </div>
               </div>
-              <span className={`text-[10px] ${engine === "gemini" ? "text-blue-100" : "text-blue-700/80"}`}>
-                Balanced • Free Key
-              </span>
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 ${
+                  engine === "gemini" ? "border-blue-600" : "border-slate-300"
+                }`}
+              >
+                {engine === "gemini" && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+              </div>
             </button>
           </div>
-        </div>
 
-        {/* API Key Field (Visible when Groq or Gemini is selected) */}
-        {engine !== "google" && (
-          <div className="pt-3 border-t border-blue-100">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                <Key size={13} className="text-blue-600" />
-                {engine === "groq" ? "Groq API Key" : "Gemini API Key"}{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowGuide(!showGuide)}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold underline"
-                >
-                  <HelpCircle size={12} />
-                  {showGuide ? "Hide Guide" : "How to get a key?"}
-                </button>
-                <a
-                  href={
-                    engine === "groq"
-                      ? "https://console.groq.com/keys"
-                      : "https://aistudio.google.com/app/apikey"
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
-                >
-                  {engine === "groq" ? "Groq Console" : "AI Studio"}{" "}
-                  <ExternalLink size={11} />
-                </a>
-              </div>
-            </div>
-
-            {currentApiKey.trim() && !isEditingKey ? (
-              /* Saved Key Display with Edit and Remove */
-              <div className="flex items-center justify-between p-2.5 sm:p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="p-1.5 bg-emerald-600 text-white rounded-lg shrink-0">
-                    <CheckCircle2 size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-blue-950">
-                        {engine === "groq" ? "Groq API Key" : "Gemini API Key"}
-                      </span>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                        Saved
-                      </span>
-                    </div>
-                    <p className="font-mono text-xs text-blue-900 truncate mt-0.5">
-                      {showApiKey
-                        ? currentApiKey
-                        : `${currentApiKey.slice(0, 4)}••••••••••••••••${currentApiKey.slice(-4)}`}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 shrink-0 ml-2">
+          {/* API Key Box for Groq & Gemini */}
+          {engine !== "google" && (
+            <div className="pt-3 border-t border-slate-100 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Key size={13} className="text-blue-600" />
+                  {engine === "groq" ? "Groq API Key" : "Gemini API Key"}{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center gap-2.5">
                   <button
                     type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-100/60 rounded-lg transition-colors cursor-pointer"
-                    title={showApiKey ? "Hide key" : "Reveal key"}
+                    onClick={() => setShowGuide(!showGuide)}
+                    className="text-[11px] text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold underline cursor-pointer"
                   >
-                    {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                    <HelpCircle size={12} />
+                    {showGuide ? "Hide Guide" : "How to get a key?"}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setKeyInputValue(currentApiKey);
-                      setIsEditingKey(true);
-                    }}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-800 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-300 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                    title="Edit API key"
-                  >
-                    <Pencil size={12} />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveKey(engine)}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-600 bg-white hover:bg-red-50 border border-red-200 hover:border-red-300 rounded-lg transition-colors cursor-pointer shadow-2xs"
-                    title="Remove API key"
-                  >
-                    <Trash2 size={12} />
-                    <span>Remove</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Input Field (Entering or Editing Key) */
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      ref={apiKeyInputRef}
-                      type={showApiKey ? "text" : "password"}
-                      value={keyInputValue}
-                      onChange={(e) => setKeyInputValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleSaveKey();
-                      }}
-                      placeholder={
-                        engine === "groq"
-                          ? "Paste your Groq API key (gsk_...)"
-                          : "Paste your Gemini API key (AIzaSy...)"
-                      }
-                      disabled={isTranslating}
-                      className={`w-full bg-blue-50/30 border text-blue-950 placeholder-blue-300 text-xs sm:text-sm rounded-lg p-2.5 pr-10 focus:outline-none focus:bg-white font-mono ${
-                        globalError && !keyInputValue.trim()
-                          ? "border-red-500 focus:border-red-500"
-                          : "border-blue-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-700 p-1"
-                      title={showApiKey ? "Hide key" : "Show key"}
-                    >
-                      {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleSaveKey}
-                    disabled={!keyInputValue.trim() || isTranslating}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-colors shadow-2xs shrink-0 cursor-pointer ${
-                      keyInputValue.trim()
-                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                        : "bg-blue-100 text-blue-400 cursor-not-allowed"
-                    }`}
-                  >
-                    Save
-                  </button>
-
-                  {isEditingKey && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingKey(false);
-                        setKeyInputValue("");
-                      }}
-                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <p className="text-[11px] text-blue-700/70 mt-1.5">
-              Stored only in your browser (localStorage). Never saved on our servers.
-            </p>
-
-            {/* Expandable Quick Guide */}
-            {showGuide && (
-              <div className="mt-3 p-3.5 bg-blue-50/80 border border-blue-200 rounded-lg text-xs space-y-2.5 animate-in fade-in duration-150">
-                <div className="flex items-center justify-between pb-1.5 border-b border-blue-200/60">
-                  <span className="font-bold text-blue-950">
-                    Quick Key Guide for {engine === "groq" ? "Groq" : "Gemini"}
-                  </span>
-                  <Link href="/guide" className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 underline">
-                    Full tutorial &rarr;
-                  </Link>
-                </div>
-
-                {engine === "groq" && (
-                  <ol className="list-decimal list-inside space-y-1.5 text-slate-700 leading-relaxed text-[11px]">
-                    <li>
-                      Visit{" "}
-                      <a
-                        href="https://console.groq.com/keys"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 font-semibold underline"
-                      >
-                        console.groq.com/keys
-                      </a>{" "}
-                      and sign in with Google or GitHub (no credit card required).
-                    </li>
-                    <li>
-                      Click the <strong>"Create API Key"</strong> button.
-                    </li>
-                    <li>
-                      Copy your key (starts with <code className="bg-white px-1 py-0.5 rounded border border-blue-200 font-mono text-[10px]">gsk_...</code>).
-                    </li>
-                    <li>Paste the key into the input field above.</li>
-                  </ol>
-                )}
-
-                {engine === "gemini" && (
-                  <ol className="list-decimal list-inside space-y-1.5 text-slate-700 leading-relaxed text-[11px]">
-                    <li>
-                      Visit{" "}
-                      <a
-                        href="https://aistudio.google.com/app/apikey"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 font-semibold underline"
-                      >
-                        Google AI Studio
-                      </a>{" "}
-                      and sign in with your Google account.
-                    </li>
-                    <li>
-                      Click the blue <strong>"Create API key"</strong> button.
-                    </li>
-                    <li>
-                      Select or create a project, then copy the key (starts with <code className="bg-white px-1 py-0.5 rounded border border-blue-200 font-mono text-[10px]">AIzaSy...</code>).
-                    </li>
-                    <li>Paste the key into the input field above.</li>
-                  </ol>
-                )}
-
-                <div className="pt-1">
                   <a
                     href={
                       engine === "groq"
@@ -989,197 +872,435 @@ export default function SubtitleTranslator() {
                     }
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-md text-[11px] shadow-xs transition-colors"
+                    className="text-[11px] text-blue-600 hover:text-blue-800 flex items-center gap-1 font-semibold"
                   >
-                    <span>
-                      Open {engine === "groq" ? "Groq Console" : "Google AI Studio"}
-                    </span>
-                    <ExternalLink size={12} />
+                    {engine === "groq" ? "Groq Console" : "AI Studio"}
+                    <ExternalLink size={11} />
                   </a>
+                </div>
+              </div>
+
+              {currentApiKey.trim() && !isEditingKey ? (
+                /* Saved Key Display with Edit & Remove */
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-slate-50/80 border border-slate-200 rounded-2xl gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 bg-emerald-600 text-white rounded-lg shrink-0">
+                      <CheckCircle2 size={15} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-900">
+                          {engine === "groq" ? "Groq API Key" : "Gemini API Key"}
+                        </span>
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                          Saved
+                        </span>
+                      </div>
+                      <p className="font-mono text-xs text-slate-700 truncate mt-0.5">
+                        {showApiKey
+                          ? currentApiKey
+                          : `${currentApiKey.slice(0, 4)}••••••••••••••••${currentApiKey.slice(-4)}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer"
+                      title={showApiKey ? "Hide key" : "Reveal key"}
+                    >
+                      {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setKeyInputValue(currentApiKey);
+                        setIsEditingKey(true);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                      title="Edit API key"
+                    >
+                      <Pencil size={12} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveKey(engine)}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-600 bg-white hover:bg-red-50 border border-red-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                      title="Remove API key"
+                    >
+                      <Trash2 size={12} />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Input Field */
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        ref={apiKeyInputRef}
+                        type={showApiKey ? "text" : "password"}
+                        value={keyInputValue}
+                        onChange={(e) => setKeyInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSaveKey();
+                        }}
+                        placeholder={
+                          engine === "groq"
+                            ? "Paste your Groq API key (gsk_...)"
+                            : "Paste your Gemini API key (AIzaSy...)"
+                        }
+                        disabled={isTranslating}
+                        className={`w-full bg-slate-50/50 border text-slate-900 placeholder-slate-400 text-xs sm:text-sm rounded-xl p-3 pr-10 focus:outline-none focus:bg-white font-mono ${
+                          globalError && !keyInputValue.trim()
+                            ? "border-red-500 focus:border-red-500"
+                            : "border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                        title={showApiKey ? "Hide key" : "Show key"}
+                      >
+                        {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveKey}
+                      disabled={!keyInputValue.trim() || isTranslating}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-2xs shrink-0 cursor-pointer ${
+                        keyInputValue.trim()
+                          ? "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      }`}
+                    >
+                      Save
+                    </button>
+
+                    {isEditingKey && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingKey(false);
+                          setKeyInputValue("");
+                        }}
+                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition-colors shrink-0 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-500">
+                Stored only in your browser (localStorage). Never saved on our servers.
+              </p>
+
+              {/* Expandable Quick Guide */}
+              {showGuide && (
+                <div className="mt-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-2.5 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <span className="font-bold text-slate-900">
+                      Quick Key Guide for {engine === "groq" ? "Groq" : "Gemini"}
+                    </span>
+                    <Link
+                      href="/guide"
+                      className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Full tutorial &rarr;
+                    </Link>
+                  </div>
+
+                  {engine === "groq" && (
+                    <ol className="list-decimal list-inside space-y-1.5 text-slate-600 leading-relaxed text-[11px]">
+                      <li>
+                        Visit{" "}
+                        <a
+                          href="https://console.groq.com/keys"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 font-semibold underline"
+                        >
+                          console.groq.com/keys
+                        </a>{" "}
+                        and sign in with Google or GitHub (no credit card required).
+                      </li>
+                      <li>Click the <strong>&quot;Create API Key&quot;</strong> button.</li>
+                      <li>
+                        Copy your key (starts with <code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono text-[10px]">gsk_...</code>).
+                      </li>
+                      <li>Paste the key into the input field above.</li>
+                    </ol>
+                  )}
+
+                  {engine === "gemini" && (
+                    <ol className="list-decimal list-inside space-y-1.5 text-slate-600 leading-relaxed text-[11px]">
+                      <li>
+                        Visit{" "}
+                        <a
+                          href="https://aistudio.google.com/app/apikey"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 font-semibold underline"
+                        >
+                          Google AI Studio
+                        </a>{" "}
+                        and sign in with your Google account.
+                      </li>
+                      <li>Click the blue <strong>&quot;Create API key&quot;</strong> button.</li>
+                      <li>
+                        Select or create a project, then copy the key (starts with <code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono text-[10px]">AIzaSy...</code>).
+                      </li>
+                      <li>Paste the key into the input field above.</li>
+                    </ol>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 4. Action Button (Translate to Language ->) */}
+        <div className="pt-2">
+          {isTranslating ? (
+            <div className="flex items-center gap-2 sm:gap-2.5 w-full">
+              <div className="flex-1 min-w-0 bg-blue-50 border border-blue-200 text-blue-950 font-semibold py-3 sm:py-4 px-3 sm:px-5 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs overflow-hidden">
+                <Loader2 className="animate-spin text-blue-600 shrink-0" size={16} />
+                <span className="truncate">
+                  {retryCountdown !== null
+                    ? retryCountdown.message
+                    : `Translating to ${selectedLanguage?.name || "target language"} (${completedCount}/${totalChunks})...`}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleStopTranslation}
+                className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 sm:py-4 px-3.5 sm:px-6 rounded-2xl text-xs sm:text-sm transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                title="Stop translation"
+              >
+                <Square size={13} className="fill-white shrink-0" />
+                <span>Stop</span>
+              </button>
+            </div>
+          ) : completedCount > 0 && completedCount < totalChunks ? (
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={handleStartTranslation}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-sm sm:text-base transition-colors shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Play size={16} className="fill-white" />
+                <span>
+                  Resume Translation ({completedCount}/{totalChunks})
+                </span>
+                <ArrowRight size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={generateDownload}
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Download size={14} />
+                <span>Download partial translated subtitles ({completedCount} batches)</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleStartTranslation}
+              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 px-6 rounded-2xl text-sm sm:text-base shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <span>
+                {selectedLanguage
+                  ? `Translate to ${selectedLanguage.name}`
+                  : "Translate Subtitles"}
+              </span>
+              <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* 5. Progress Bar & Recommendation */}
+        {(isTranslating || (completedCount > 0 && !downloadUrl) || limitReachedEngine) && (
+          <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl shadow-2xs">
+            {(isTranslating || (completedCount > 0 && !downloadUrl)) && (
+              <>
+                <div className="flex justify-between text-xs font-semibold text-slate-800 mb-2">
+                  <span>
+                    Progress: {completedCount} / {totalChunks} batches
+                  </span>
+                  <span className="text-blue-600 font-bold">{progress}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                {retryCountdown && (
+                  <div className="mt-2.5 p-2 bg-amber-50 border border-amber-200/80 rounded-xl flex items-center gap-2 text-xs text-amber-800 font-medium">
+                    <Loader2 size={13} className="animate-spin text-amber-600 shrink-0" />
+                    <span>{retryCountdown.message}</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Fast Switch Recommendation (Near Progress Bar) */}
+            {limitReachedEngine && (
+              <div
+                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs text-slate-700 animate-in fade-in duration-200 ${
+                  isTranslating || (completedCount > 0 && !downloadUrl)
+                    ? "mt-3 pt-3 border-t border-slate-200"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Globe size={15} className="text-blue-600 shrink-0" />
+                  <span>
+                    {limitReachedEngine !== "google" ? (
+                      <>
+                        Need fast translation? Switch to{" "}
+                        <strong className="font-semibold text-slate-900">Google Translate</strong> to
+                        continue immediately without waiting.
+                      </>
+                    ) : (
+                      <>
+                        Need fast translation? Switch to{" "}
+                        <strong className="font-semibold text-slate-900">Groq AI</strong> to
+                        continue immediately.
+                      </>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  {limitReachedEngine !== "google" ? (
+                    <button
+                      type="button"
+                      onClick={() => handleQuickSwitchToEngine("google")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Globe size={13} />
+                      <span>Switch to Google Translate</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleQuickSwitchToEngine("groq")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Zap size={13} />
+                      <span>Switch to Groq AI</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setLimitReachedEngine(null)}
+                    className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               </div>
             )}
           </div>
         )}
-      </div>
 
-      {/* 4. Action Buttons */}
-      <div className="space-y-3">
-        {isTranslating ? (
-          <div className="flex gap-2">
-            <div className="flex-1 bg-blue-50 border border-blue-200 text-blue-950 font-semibold py-3 px-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs">
-              <Loader2 className="animate-spin text-blue-600 shrink-0" size={16} />
-              <span className="truncate">
-                {retryCountdown !== null
-                  ? retryCountdown.message
-                  : `Translating to ${selectedLanguage?.name || "target language"} (${completedCount}/${totalChunks})...`}
-              </span>
+        {/* 6. Translation Complete & Download */}
+        {downloadUrl && (
+          <div className="p-6 bg-slate-50/80 border border-slate-200 rounded-2xl text-center space-y-3.5 animate-in fade-in">
+            <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200">
+              <CheckCircle size={30} />
             </div>
-            <button
-              type="button"
-              onClick={handleStopTranslation}
-              className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-4 sm:px-5 rounded-xl text-xs sm:text-sm transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-              title="Stop translation"
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Translation Complete!</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Translated to {selectedLanguage ? selectedLanguage.name : "target language"} using{" "}
+                {engine === "google" ? "Google Translate" : engine === "groq" ? "Groq AI" : "Gemini AI"}
+              </p>
+            </div>
+
+            <a
+              href={downloadUrl}
+              download={`translated_${selectedLanguage ? selectedLanguage.code : "out"}_${file?.name || "subtitles.srt"}`}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-sm transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Square size={14} className="fill-white" />
-              <span>Stop</span>
-            </button>
+              <Download size={18} />
+              <span>Download Translated SRT</span>
+            </a>
+
+            <div>
+              <button
+                type="button"
+                onClick={handleResetFile}
+                className="text-xs text-blue-600 hover:text-blue-800 transition-colors font-semibold cursor-pointer"
+              >
+                Translate another file
+              </button>
+            </div>
           </div>
-        ) : completedCount > 0 && completedCount < totalChunks ? (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={handleStartTranslation}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Play size={16} className="fill-white" />
-              <span>
-                Resume Translation ({completedCount}/${totalChunks})
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={generateDownload}
-              className="w-full bg-blue-50 hover:bg-blue-100 text-blue-800 font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors border border-blue-200 flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Download size={14} />
-              <span>Download partial translated subtitles ({completedCount} batches)</span>
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleStartTranslation}
-            className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span>
-              {selectedLanguage
-                ? `Translate to ${selectedLanguage.name}`
-                : "Translate Subtitles"}
-            </span>
-          </button>
         )}
       </div>
 
-      {/* 5. Progress Bar & Fast Switch Recommendation */}
-      {(isTranslating || (completedCount > 0 && !downloadUrl) || limitReachedEngine) && (
-        <div className="mt-4 p-4 bg-white border border-blue-200 rounded-xl shadow-xs">
-          {(isTranslating || (completedCount > 0 && !downloadUrl)) && (
-            <>
-              <div className="flex justify-between text-xs font-semibold text-blue-950 mb-2">
-                <span>
-                  Progress: {completedCount} / {totalChunks} batches
-                </span>
-                <span className="text-blue-600 font-bold">{progress}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-blue-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              {retryCountdown && (
-                <div className="mt-2.5 p-2 bg-amber-50 border border-amber-200/80 rounded-lg flex items-center gap-2 text-xs text-amber-800 font-medium">
-                  <Loader2 size={13} className="animate-spin text-amber-600 shrink-0" />
-                  <span>{retryCountdown.message}</span>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Fast Switch Recommendation (Near Progress Bar) */}
-          {limitReachedEngine && (
-            <div
-              className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs text-blue-900 animate-in fade-in duration-200 ${
-                isTranslating || (completedCount > 0 && !downloadUrl)
-                  ? "mt-3 pt-3 border-t border-blue-100"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Globe size={15} className="text-blue-600 shrink-0" />
-                <span>
-                  {limitReachedEngine !== "google" ? (
-                    <>
-                      Need fast translation? Switch to{" "}
-                      <strong className="font-semibold text-blue-950">Google Translate</strong> to
-                      continue immediately without waiting.
-                    </>
-                  ) : (
-                    <>
-                      Need fast translation? Switch to{" "}
-                      <strong className="font-semibold text-blue-950">Groq AI</strong> to
-                      continue immediately.
-                    </>
-                  )}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {limitReachedEngine !== "google" ? (
-                  <button
-                    type="button"
-                    onClick={() => handleQuickSwitchToEngine("google")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Globe size={13} />
-                    <span>Switch to Google Translate</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleQuickSwitchToEngine("groq")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Zap size={13} />
-                    <span>Switch to Groq AI</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setLimitReachedEngine(null)}
-                  className="p-1 text-blue-400 hover:text-blue-700 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
-                  title="Dismiss"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 6. Translation Complete & Download */}
-      {downloadUrl && (
-        <div className="mt-4 p-5 bg-white border border-blue-200 rounded-xl shadow-xs text-center space-y-3">
-          <div className="inline-flex p-2.5 bg-blue-50 text-blue-600 rounded-full border border-blue-200">
-            <CheckCircle size={28} />
+      {/* 4 Bottom Feature Highlights (Like reference image) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 max-w-3xl mx-auto w-full relative z-10">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Zap size={18} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-blue-950">Translation Complete!</h2>
-            <p className="text-xs text-blue-700/70 mt-0.5">
-              Translated to {selectedLanguage ? selectedLanguage.name : "target language"} using{" "}
-              {engine === "google" ? "Google Translate" : engine === "groq" ? "Groq AI" : "Gemini AI"}
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900">Fast & Accurate</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
+              High quality translation with advanced AI.
             </p>
           </div>
-
-          <a
-            href={downloadUrl}
-            download={`translated_${selectedLanguage ? selectedLanguage.code : "out"}_${file?.name || "subtitles.srt"}`}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-sm transition-colors shadow-xs flex items-center justify-center gap-2"
-          >
-            <Download size={18} />
-            <span>Download Translated SRT</span>
-          </a>
-
-          <button
-            type="button"
-            onClick={handleResetFile}
-            className="text-xs text-blue-600 hover:text-blue-800 transition-colors pt-1 font-semibold"
-          >
-            Translate another file
-          </button>
         </div>
-      )}
+
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <ShieldCheck size={18} />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900">Secure</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
+              Your files are processed in memory. No storage.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Globe size={18} />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900">Multiple Languages</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
+              Support for 40+ languages with natural results.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Infinity size={18} />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900">Simple & Easy</h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
+              Just upload, select and translate.
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

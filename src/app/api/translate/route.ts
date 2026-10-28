@@ -5,6 +5,8 @@ import { translateWithGemini } from "@/lib/translation/providers/gemini";
 import { translateWithGoogle } from "@/lib/translation/providers/google";
 import { translateWithGroq } from "@/lib/translation/providers/groq";
 
+export const runtime = "edge";
+
 export async function POST(req: Request) {
   try {
     const body: TranslationRequestBody = await req.json();
