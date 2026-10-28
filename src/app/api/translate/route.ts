@@ -5,7 +5,7 @@ import { translateWithGemini } from "@/lib/translation/providers/gemini";
 import { translateWithGoogle } from "@/lib/translation/providers/google";
 import { translateWithGroq } from "@/lib/translation/providers/groq";
 
-export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
